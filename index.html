@@ -9,13 +9,15 @@
     ul { list-style: none; padding: 0; }
     li { margin: 8px 0; }
     input[type="checkbox"] { margin-right: 8px; }
-    #errorBox { color: red; margin: 10px 0; }
+    #messageBox { margin: 10px 0; font-weight: bold; }
+    .error { color: red; }
+    .success { color: green; }
     #loading { color: #555; margin: 10px 0; font-style: italic; }
   </style>
 </head>
 <body>
   <h1>🛒 Inköpslista</h1>
-  <div id="errorBox"></div>
+  <div id="messageBox"></div>
   <div id="loading" style="display:none;">Laddar lista...</div>
 
   <input id="itemInput" placeholder="Lägg till vara..." />
@@ -32,12 +34,13 @@
 
     const itemList = document.getElementById("itemList");
     const itemInput = document.getElementById("itemInput");
-    const errorBox = document.getElementById("errorBox");
+    const messageBox = document.getElementById("messageBox");
     const loading = document.getElementById("loading");
 
-    function showError(msg) {
-      errorBox.textContent = msg;
-      setTimeout(() => { errorBox.textContent = ""; }, 5000); // rensa efter 5 sek
+    function showMessage(msg, type = "success") {
+      messageBox.textContent = msg;
+      messageBox.className = type; // "success" eller "error"
+      setTimeout(() => { messageBox.textContent = ""; }, 3000);
     }
 
     function showLoading(show) {
@@ -53,7 +56,7 @@
         renderItems(data);
       } catch (err) {
         console.error("Fel vid fetch:", err);
-        showError("Kunde inte ladda listan.");
+        showMessage("Kunde inte ladda listan.", "error");
       } finally {
         showLoading(false);
       }
@@ -84,9 +87,10 @@
         const { error } = await supabase.from("items").insert([{ name }]);
         if (error) throw error;
         itemInput.value = "";
+        showMessage("✅ Varor tillagd!");
       } catch (err) {
         console.error("Fel vid insert:", err);
-        showError("Kunde inte lägga till vara. Kontrollera anslutningen.");
+        showMessage("Kunde inte lägga till vara. Kontrollera anslutningen.", "error");
       }
     }
 
@@ -97,14 +101,14 @@
         if (error) throw error;
       } catch (err) {
         console.error("Fel vid update:", err);
-        showError("Kunde inte uppdatera vara.");
+        showMessage("Kunde inte uppdatera vara.", "error");
       }
     }
 
     // Realtidsuppdatering
     supabase.channel("room1")
       .on("postgres_changes", { event: "*", schema: "public", table: "items" }, payload => {
-        loadItems(); // laddar om listan när något ändras
+        loadItems();
       })
       .subscribe();
 
