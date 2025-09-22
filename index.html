@@ -25,12 +25,11 @@
   <ul id="itemList"></ul>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js";
-
-    // 🔑 Byt ut mot ditt Supabase-projekts värden
-    const SUPABASE_URL = "https://DIN-PROJEKT-URL.supabase.co";
-    const SUPABASE_KEY = "DIN-ANON-KEY";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+   
+    import { createClient } from '@supabase/supabase-js'
+    const supabaseUrl = 'https://wkdognpbmqrtuxbpsiie.supabase.co'
+    const supabaseKey = process.env.SUPABASE_KEY
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     const itemList = document.getElementById("itemList");
     const itemInput = document.getElementById("itemInput");
