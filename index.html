@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-  <h1>🛒 Inköpslista</h1>
+  <h1>🛒 Inköpslista v1</h1>
   <div id="messageBox"></div>
   <div id="loading" style="display:none;">Laddar lista...</div>
 
@@ -25,11 +25,12 @@
   <ul id="itemList"></ul>
 
   <script type="module">
-   
-    import { createClient } from '@supabase/supabase-js'
-    const supabaseUrl = 'https://wkdognpbmqrtuxbpsiie.supabase.co'
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZG9nbnBibXFydHV4YnBzaWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTE2NDQsImV4cCI6MjA3NDEyNzY0NH0.l6F-mhXSkJxiQuQU8aAA3Iu0FXdaG5HgWxJQ3it7HUE'
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+    // 🔑 Byt ut mot ditt Supabase-projekts värden
+    const SUPABASE_URL = "https://DIN-PROJEKT-URL.supabase.co";
+    const SUPABASE_KEY = "DIN-ANON-KEY";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const itemList = document.getElementById("itemList");
     const itemInput = document.getElementById("itemInput");
@@ -39,7 +40,7 @@
     function showMessage(msg, type = "success") {
       messageBox.textContent = msg;
       messageBox.className = type; // "success" eller "error"
-      setTimeout(() => { messageBox.textContent = ""; }, 3000);
+      setTimeout(() => { messageBox.textContent = ""; }, 4000);
     }
 
     function showLoading(show) {
@@ -55,7 +56,7 @@
         renderItems(data);
       } catch (err) {
         console.error("Fel vid fetch:", err);
-        showMessage("Kunde inte ladda listan.", "error");
+        showMessage("❌ Kunde inte ladda listan.", "error");
       } finally {
         showLoading(false);
       }
@@ -86,10 +87,10 @@
         const { error } = await supabase.from("items").insert([{ name }]);
         if (error) throw error;
         itemInput.value = "";
-        showMessage("✅ Varor tillagd!");
+        showMessage("✅ Varor tillagd!", "success");
       } catch (err) {
         console.error("Fel vid insert:", err);
-        showMessage("Kunde inte lägga till vara. Kontrollera anslutningen.", "error");
+        showMessage("❌ Kunde inte lägga till vara. Kontrollera anslutningen.", "error");
       }
     }
 
@@ -98,20 +99,13 @@
       try {
         const { error } = await supabase.from("items").update({ checked }).eq("id", id);
         if (error) throw error;
+        showMessage("✅ Uppdatering sparad!", "success");
       } catch (err) {
         console.error("Fel vid update:", err);
-        showMessage("Kunde inte uppdatera vara.", "error");
+        showMessage("❌ Kunde inte uppdatera vara.", "error");
       }
     }
 
     // Realtidsuppdatering
     supabase.channel("room1")
-      .on("postgres_changes", { event: "*", schema: "public", table: "items" }, payload => {
-        loadItems();
-      })
-      .subscribe();
-
-    loadItems();
-  </script>
-</body>
-</html>
+      .on("postgres_changes", { event_
