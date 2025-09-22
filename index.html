@@ -9,10 +9,15 @@
     ul { list-style: none; padding: 0; }
     li { margin: 8px 0; }
     input[type="checkbox"] { margin-right: 8px; }
+    #errorBox { color: red; margin: 10px 0; }
+    #loading { color: #555; margin: 10px 0; font-style: italic; }
   </style>
 </head>
 <body>
   <h1>🛒 Inköpslista</h1>
+  <div id="errorBox"></div>
+  <div id="loading" style="display:none;">Laddar lista...</div>
+
   <input id="itemInput" placeholder="Lägg till vara..." />
   <button onclick="addItem()">➕ Lägg till</button>
   <ul id="itemList"></ul>
@@ -21,17 +26,37 @@
     import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
     // 🔑 Byt ut mot ditt Supabase-projekts värden
-    const SUPABASE_URL = "https://wkdognpbmqrtuxbpsiie.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrZG9nbnBibXFydHV4YnBzaWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTE2NDQsImV4cCI6MjA3NDEyNzY0NH0.l6F-mhXSkJxiQuQU8aAA3Iu0FXdaG5HgWxJQ3it7HUE";
+    const SUPABASE_URL = "https://DIN-PROJEKT-URL.supabase.co";
+    const SUPABASE_KEY = "DIN-ANON-KEY";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const itemList = document.getElementById("itemList");
     const itemInput = document.getElementById("itemInput");
+    const errorBox = document.getElementById("errorBox");
+    const loading = document.getElementById("loading");
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      setTimeout(() => { errorBox.textContent = ""; }, 5000); // rensa efter 5 sek
+    }
+
+    function showLoading(show) {
+      loading.style.display = show ? "block" : "none";
+    }
 
     // Hämta lista
     async function loadItems() {
-      const { data } = await supabase.from("items").select("*").order("id");
-      renderItems(data);
+      try {
+        showLoading(true);
+        const { data, error } = await supabase.from("items").select("*").order("id");
+        if (error) throw error;
+        renderItems(data);
+      } catch (err) {
+        console.error("Fel vid fetch:", err);
+        showError("Kunde inte ladda listan.");
+      } finally {
+        showLoading(false);
+      }
     }
 
     // Rendera lista i DOM
@@ -54,13 +79,26 @@
     async function addItem() {
       const name = itemInput.value.trim();
       if (!name) return;
-      await supabase.from("items").insert([{ name }]);
-      itemInput.value = "";
+
+      try {
+        const { error } = await supabase.from("items").insert([{ name }]);
+        if (error) throw error;
+        itemInput.value = "";
+      } catch (err) {
+        console.error("Fel vid insert:", err);
+        showError("Kunde inte lägga till vara. Kontrollera anslutningen.");
+      }
     }
 
     // Uppdatera avbockning
     async function toggleItem(id, checked) {
-      await supabase.from("items").update({ checked }).eq("id", id);
+      try {
+        const { error } = await supabase.from("items").update({ checked }).eq("id", id);
+        if (error) throw error;
+      } catch (err) {
+        console.error("Fel vid update:", err);
+        showError("Kunde inte uppdatera vara.");
+      }
     }
 
     // Realtidsuppdatering
